@@ -8,30 +8,24 @@ namespace DesktopWidget
 {
     public partial class MainWindow : Window
     {
-        // Constructor for the MainWindow class
         public MainWindow()
         {
             InitializeComponent();
-            // Use an async method to load GitHub activity
             InitializeWebView2();
         }
 
         // Initialize WebView2 control and make it ready
         private async void InitializeWebView2()
         {
-            // Wait for WebView2 to initialize
+         
             await WebView.EnsureCoreWebView2Async(null);
-            // Load GitHub activity after WebView2 is ready
             await LoadGitHubActivityAsync("ignatiosdev");
         }
 
-        // Method to load GitHub activity for a given username
         public async Task LoadGitHubActivityAsync(string username)
         {
-            // Fetch GitHub activity data and handle it
+ 
             string activityJson = await GetGitHubActivityAsync(username);
-
-            // Pass the data to WebView2 to display
             await ShowGitHubActivity(username, activityJson);
         }
 
@@ -40,17 +34,10 @@ namespace DesktopWidget
         {
             using (HttpClient client = new HttpClient())
             {
-                // Add the user-agent header to the request.
                 client.DefaultRequestHeaders.Add("User-Agent", "DesktopWidget");
-
-                // GitHub API endpoint for public events
                 string apiUrl = $"https://api.github.com/users/{username}/events/public";
-
-                // Send the GET request to GitHub's API and get the response.
                 HttpResponseMessage response = await client.GetAsync(apiUrl);
-                response.EnsureSuccessStatusCode(); // Ensure a successful response.
-
-                // Return the JSON response as a string.
+                response.EnsureSuccessStatusCode(); 
                 string responseData = await response.Content.ReadAsStringAsync();
                 return responseData;
             }
