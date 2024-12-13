@@ -1,47 +1,99 @@
 ﻿using System;
+using System.IO;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
 
-namespace DesktopWidget
+namespace GithubWidget
 {
     public partial class MainWindow : Window
     {
+        private const string GitHubToken = "";
+        private const string GitHubUsername = "ignatiosdev";
+
+
         public MainWindow()
         {
             InitializeComponent();
             InitializeWebView2();
+            RedirectConsoleToWebView();
+            GetGithubActivity();  
         }
 
         // Initialize WebView2 control and make it ready
         private async void InitializeWebView2()
         {
-         
             await WebView.EnsureCoreWebView2Async(null);
-            await LoadGitHubActivityAsync("ignatiosdev");
         }
 
-        public async Task LoadGitHubActivityAsync(string username)
-        {
- 
-            string activityJson = await GetGitHubActivityAsync(username);
-            await ShowGitHubActivity(username, activityJson);
-        }
+        // CONSOLE TO WEBVIEW LOGIC
 
-        // Fetch activity from GitHub API
-        public async Task<string> GetGitHubActivityAsync(string username)
+        private void RedirectConsoleToWebView()
         {
-            using (HttpClient client = new HttpClient())
+            // Ensure CoreWebView2 is initialized before setting the custom TextWriter
+            WebView.CoreWebView2InitializationCompleted += (sender, args) =>
             {
-                client.DefaultRequestHeaders.Add("User-Agent", "DesktopWidget");
-                string apiUrl = $"https://api.github.com/users/{username}/events/public";
-                HttpResponseMessage response = await client.GetAsync(apiUrl);
-                response.EnsureSuccessStatusCode(); 
-                string responseData = await response.Content.ReadAsStringAsync();
-                return responseData;
+                // Pass CoreWebView2 to WebView2TextWriter after initialization
+                Console.SetOut(new WebView2TextWriter(WebView.CoreWebView2));
+            };
+        }
+
+        public class WebView2TextWriter : TextWriter
+        {
+            private readonly CoreWebView2 _coreWebView2;
+            public WebView2TextWriter(CoreWebView2 coreWebView2)
+            {
+                _coreWebView2 = coreWebView2;
+            }
+            public override void Write(string value)
+            {
+                // Use WebView2's ExecuteScriptAsync to log to browser's console
+                if (_coreWebView2 != null)
+                {
+                    string script = $"console.log('{value.Replace("'", "\\'")}');";
+                    _coreWebView2.ExecuteScriptAsync(script);
+                }
+            }
+
+            public override Encoding Encoding => Encoding.UTF8;
+        }
+
+       
+        // GITHUB ACTIVITY REQUEST
+        private static async void GetGithubActivity()
+        {
+            try
+            {
+                // Create an instance of the GitHubGraphQLClient with the token
+                var gitHubClient = new GithubApiClient(GitHubToken);
+
+                // Fetch user contributions using the GraphQL client
+                var contributions = await gitHubClient.GetUserContributions(GitHubUsername);
+
+                // Log the total contributions to the console
+                Console.WriteLine($"GitHub Activity for {GitHubUsername}:");
+                Console.WriteLine($"Total Contributions: {contributions.TotalContributions}");
+
+                // Log the contributions for each week
+                foreach (var week in contributions.Weeks)
+                {
+                    foreach (var day in week.ContributionDays)
+                    {
+                        string message = ($"Date: {day.Date}, Contributions: {day.ContributionCount}");
+                        Console.WriteLine(message);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle any errors (e.g., network issues, invalid token)
+                Console.WriteLine($"An error occurred: {ex.Message}");
             }
         }
+
+       
 
         // Display GitHub activity in WebView2 control
         public async Task ShowGitHubActivity(string username, string activityJson)

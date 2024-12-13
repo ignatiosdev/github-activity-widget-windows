@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GithubWidget")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+373efc111b17276dccadfeb94cb4e16977bc9101")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f48b0446a52f66eaed7c1c8114f27c92f2572d62")]
 [assembly: System.Reflection.AssemblyProductAttribute("GithubWidget")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GithubWidget")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
